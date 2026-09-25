@@ -1,0 +1,83 @@
+ch86t — Technical Specification & Product Concept
+
+A Bare-Metal, Modular C++26 Decentralized Core Architecture for Linux & WSL2
+
+1. Executive Summary
+
+ch86t is a zero-bloat, terminal-native, peer-to-peer (P2P) decentralized communications client engineered specifically for Linux kernels and Windows Subsystem for Linux (WSL2). By executing directly within standard terminal registers via native <termios.h> raw input loops, the system eliminates traditional cross-platform presentation overhead (such as Electron or Chromium runtimes), maintaining a runtime memory footprint under 15MB of RAM.The platform guarantees absolute data privacy through mandatory End-to-End Encryption (E2EE) and shifts infrastructural ownership entirely onto user-hosted nodes. It addresses resource centralization by design, while simultaneously introducing a highly responsive, zero-latency asset-streaming paradigm capable of processing multi-gigabit direct file transfers and real-time ASCII state-synchronized gaming (e.g., collaborative ASCII Pong).
+
+2. Architectural Pillars
+
+P2P Networking & Discovery
+
+Decentralized Topography: Operates with no single point of failure or centralized identity index. Sockets bind directly to user hardware.
+Local LAN Broadcasting: Employs multicast DNS (mDNS) to automatically discover and wire adjacent nodes running over local Wi-Fi or local networks without requiring external routing lookups.
+NAT Traversal & Hole Punching: Utilizes standard STUN/ICE hole-punching methodologies to cleanly bypass home router boundaries and handle the virtualized network address translation (NAT) layer inside WSL2 environments.
+
+Cryptographic Security Model
+
+Mandatory E2EE Protocol: Built atop asynchronous key-exchange engines (utilizing high-performance abstractions like libsodium curve math) ensuring forward secrecy across all text streams, file pieces, and game data packets.
+Zooko’s Triangle Workaround: Replaces ugly, unreadable public key hex-strings with a human-readable identifier appended with a cryptographically derived suffix (e.g., @alice-t78b). The 4-character token is a slice of the user's computed public key fingerprint, providing automated validation and a clean visual handle.
+
+[Identity Generation Pipeline]
+
+Generate Ed25519 Keypair ──► SHA-256 Public Key ──► Take First 4 Hex Bytes ──► @username-suffix
+
+3. High-Fidelity Interface Blueprint (Raw Mode Layout)
+
+By bypassing bulky framework wrappers, ch86t programs the terminal directly via raw ANSI terminal manipulations. Below is an example layout:
+
+0          11                                                                79
++----------+-------------------------------------------------------------------+ 0
+| [ch86t]  | # general-chat (@alice-t78b)                                      | 1
++----------+-------------------------------------------------------------------+ 2
+|                                                                              |
+| PEERS    | [12:15] @alice-t78b: Check out the project folder I just piped.   | 3
+| > alice  | [12:16] @me-k9s2: Got it, executing transfer routine now...       | 4
+|   bob    | [12:16] System: File [src.tar.gz] initialization confirmed.       | 5
+|          |        [████████████████████░░░░░░░░░░] 64% | 112 MB/s            | 6
+| GAMES    |                                                                   | 7
+|   Pong   |                                                                   | .
+|   Snake  |                                                                   | .
+|          |                                                                   | 19
++----------+-------------------------------------------------------------------+ 20
+| STATUS   | > /file /mnt/c/Users/Developer/src.tar.gz                         | 21
++----------+-------------------------------------------------------------------+ 22
+| Online   | [ENTER] Send  [TAB] Swap Focus  [CTRL+K] Panic Kill  [ESC] Quit   | 23
++----------+-------------------------------------------------------------------+ 24
+
+4. Feature Set & Execution Workflow
+
+A. Instant Key-Driven File Sharing (/file)
+By parsing active command strings inline inside the terminal input scanner, local nodes negotiate multi-gigabit file pipelines instantaneously.The sender issues /file <path_to_file>.The path is locally verified (with absolute native conversion for Windows paths when executing inside a WSL2 sub-environment, e.g., mapping C:\ to /mnt/c/).The local node splits the target file binary into encrypted, hash-verified chunks and streams them directly over a raw TCP/QUIC socket to the validated peer.The receiver prints an active, dynamic, inline ASCII progress meter within the text log pane without locking up the user interface loop.
+
+B. Core Defensive Systems (Anti-Sybil & Firewall Matrix)To defend against automated server farms, distributed botnets, or malicious network saturation loops, ch86t employs a tiered defensive posture:Tier 1 (In-Memory IP Blacklist): A high-speed, sliding-window request tracker maps connection volume per incoming IP address. If an isolated endpoint attempts a rapid account-generation loop (exceeding e.g., 5 requests/sec), its connection is instantly dropped at the socket layer before memory or crypto parsing occurs.Tier 2 (Global Fuse Self-Termination - SIGTERM): If a complex, distributed botnet launches a massive parallel attack using a vast array of distinct IP addresses, the application triggers a protective circuit break. When the global cross-thread counter observes an impossible threshold (e.g., >100 distinct requests/sec), it calls a native Linux SIGTERM on its own PID. The application instantly drops out of raw terminal mode, closes all open ports, and shields the host operating system from network exhaustion.
+
+C. The TOFU Protocol & Default-Deny Selection Logic
+
+Identity validation leans on the Trust On First Use (TOFU) security paradigm. When a connection attempt occurs from an unrecognized signature hash, a high-visibility, inverted ANSI warning pop-up blocks the display.To eliminate accidental authorization errors caused by typing rapidly or spamming keys, the Enter key defaults strictly to Decline. The application forces a deliberate manual movement: the operator must explicitly press Y then Enter to write the public key configuration into ~/.config/ch86t/trusted_peers.
+
+[Handshake Attempt] ──► Toggle High-Contrast Warning ──► [Y] Allow  ►[N] Decline◄
+                                                            │           (Default on ENTER)
+                                                            ▼
+                                                 Write key to disk config
+
+D. The 'KILL' Switch (Cryptographic Sanitization)The application exposes a high-priority destruction sequence (triggered via visual panel or /kill command). When invoked, it completely sanitizes the host device from any operational footprint:Zeroization: Cryptographic private seeds and key tables are scrubbed directly out of volatile RAM.Network Decoupling: Sockets are dropped, tearing down active connections instantly.Low-Level Overwrite: Config files, databases, and local chat archives are recursively opened and systematically overwritten with raw binary garbage retrieved from /dev/urandom multiple times.Unlink: The storage references are stripped entirely using filesystem removals before the binary terminates.
+
+5. Technical Stack Architecture
+
++-----------------------------------------------------------------+
+|                    CH86T APPLICATION TERMINAL                   |
++-----------------------------------------------------------------+
+|      UI LAYOUT LAYER      |   Modern C++26 Named Modules        |
+|   (Custom Raw termios     |   ( import std; )                   |
+|    Viewport Repainting)   |   Zero Legacy Macro Dependencies    |
++---------------------------+-------------------------------------+
+|    ASYNC NETWORK CORE     |   ASIO Sockets (Standalone / Direct)|
+|   (Low-Level OS Polling)  |   Multicast DNS Peer Discovery      |
++---------------------------+-------------------------------------+
+|    CRYPTOGRAPHIC ENGINE   |   libsodium / Curve25519 Math       |
+|    (E2EE Data Protection) |   SHA-256 Identity Hashing          |
++-----------------------------------------------------------------+
+|                    LINUX KERNEL / WSL2 SUBSYSTEM                |
++-----------------------------------------------------------------+
